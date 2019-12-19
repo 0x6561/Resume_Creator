@@ -1,0 +1,24 @@
+<div class="container-fullwidth border-bottom">
+  <nav class="navbar navbar-expand navbar-info bg-dark text-light">
+    <a class="navbar-brand text-success" href="/">Ox6561</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse"
+                                                 data-target="#navbarSupportedContent"
+                                                 aria-controls="navbarSupportedContent"
+                                                 aria-expanded="false" aria-label="Toggle
+                                                 navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class=" " id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <span class="navbar-text">Hello, {% if current_user.is_authenticated %}<i class="text-primary">{{ current_user.username }}</i>{% else %}<i>Stranger</i>{% endif %}</span>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href=" {% if current_user.is_authenticated %} /auth/logout {% else %} /auth/login {% endif %} ">
+            {% if current_user.is_authenticated %} Logout {% else %} Login {% endif %} </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</div>
