@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-
+<div id="RESUME_ALERT_DIV" class="container-fluid w-100 bg-warning text-light">
+</div>
 <div id="RESUME_FLD_DIV" class="container-fluid w-80 bg-dark text-light border" data-view="{{ view }}">
   <div class="container-fluid h-80 w-75">
-
-    <div id="DATE_DIV" class="container-fluid w-100 h5"></div>
+    <div class= "border-top border-bottom text-dark bg-secondary"id="">
+      <span id="DATE_DIV" class="container-fluid w-100 h5"></span>
+      <span id="RESUME_TITLE_DIV" class="container-fluid w-100 h5"></span>
+    </div>
+    <br>
     <div id="NAME_DIV" class="row justify-content-center align-items-center h1 FLD"></div>
     <div id="LOCATION_DIV" class="h4 row align-items-center justify-content-center container FLD"></div>
 
@@ -117,11 +121,13 @@
 <div id="RESUME_LIST_DIV" class="container text-white">
   <div class="container row justify-content-center align-items-center h1 border-bottom">Saved Resumes</div>
   <table class="table table-striped table-bordered table-hover text-white">
-    <thead>
+    <thead class="thead-light">
       <tr>
-        <th>Name</th>
-        <th>Location</th>
+        <th>Edit</th>
+        <th>Resume ID</th>
+        <th>Resume Name</th>
         <th>Date Modified</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody id="RESUME_LIST_TABLE">
@@ -130,18 +136,7 @@
 </div>
 
 <footer class="footer border-top">
-  <div class="bg-dark">
-    <div id="SAVE_CANCEL">
-      <button id="SAVE_RESUME" class="btn-lg btn-success" type="button">SAVE</button>
-      <button id="CANCEL_RESUME" class="btn-lg btn-danger" type="button">CANCEL</button>
-    </div>
-    <div id="EDIT_NEW">
-      <button id="EDIT_RESUME" class="btn-sm btn-secondary" type="button">EDIT</button>
-      <button id="NEW_RESUME" class="btn-sm btn-primary" type="button">NEW</button>
-    </div>
-  </div>
 </footer>
-
 
 {% endblock %}
 
@@ -151,7 +146,9 @@
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="{{url_for('static', filename='js/jquery-ui.js')}}"></script>
 <!-- script src="{{url_for('static', filename='js/resume.js')}}"></script -->
-  <script>{% include 'resume.js' %}</script>
+<script>{% include 'resume.js' %}</script>
 <script>$("#sortable").sortable();</script>
+{% include 'save_cancel_modal.html' %}
+{% include 'confirm_delete_modal.html' %}
 {% endblock %}
 

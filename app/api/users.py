@@ -14,7 +14,7 @@ def get_user_resumes(id):
     user = User.query.get_or_404(id)
     page = request.args.get('page', 1, type=int)
     pagination = user.resumes.order_by(Resume.timestamp.desc()).paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['POSTS_PER_PAGE'],
         error_out=False)
     resumes = pagination.items
     prev = None

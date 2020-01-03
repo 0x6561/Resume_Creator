@@ -221,29 +221,28 @@ def load_user(user_id):
 class Resume(db.Model):
     __tablename__ = 'resumes'
     id = db.Column(db.Integer, primary_key=True)
-    author = db.Column(db.String(64), db.ForeignKey('users.email'), index=True)
+    author = db.Column(db.String(254), db.ForeignKey('users.email'), index=True)
+    resume_title = db.Column(db.String(256), index=True)
     resume = db.Column(db.Text())
-    #revision = db.Column(db.DateTime(), default=datetime.utcnow)
+    revision = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    def __init__(self, author, resume):
-        self.author = author
-        self.resume = resume
-        self.revision  = datetime.utcnow
 
     def to_json(self):
-        res = {
-                'author': self.author,
-                'resume': self.resume,
-                'revision date': self.revision
-                }
-        return json_resume 
+        jsn_res = json.loads(self.resume)
+        jsn_res['id'] = str(self.id)
+        jsn_res['author'] = self.author
+        jsn_res['resume_title'] = self.resume_title
+        jsn_res['revision'] = str(self.revision)
+        return jsn_res
 
     def __repr__(self):
-        return '<Resume Class: Author: %r Resume: %r , Revised: %r>' % (self.author, self.resume, self.revision)
+        return '<Resume Class: Author: %r Resume Title: %r , Revised: %r>' % (self.author, self.resume_title, self.revision)
 
     @staticmethod
     def from_json(json_resume):
         resume = json.dumps(json_resume)
         if resume is None or resume == '':
             raise ValidationError('resume is empty')
-        return Resume(author=current_user, resume=resume)
+        if resume.resume_title is None:
+            resume['resume_title'] = 'untitled resume'
+        return Resume(author=current_user.email, resume_title=resume.resume_title, resume=json.dumps(resume))

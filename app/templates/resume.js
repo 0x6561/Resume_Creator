@@ -1,23 +1,25 @@
 //<!--     DISPLAY RESUME    -->
 // GLOBAL VARIABLE 
 var CUR_RESUME = {};
+var RESUME_LIST = {};
 $(document).ready(function(){
   $('#RESUME_LIST_DIV').hide();
+  $('#RESUME_FLD_DIV').hide();
   var VIEW = $('#RESUME_FLD_DIV').data("view");
   switch(VIEW) {
-  case 'default':
-    view_default();
-    break;
-  case 'edit':
-    view_edit();
-    break;
-  case 'new':
-    view_new();
-    break;
-  default:
+    case 'default':
+      view_default();
+      break;
+    case 'edit':
+      view_edit();
+      break;
+    case 'new':
+      view_new();
+      break;
+    default:
       console.log("default.. data missing/unreadable?")
-    // code block
-}
+      // code block
+  }
 
 });
 
@@ -25,25 +27,44 @@ function view_default(){
   get_resume(display_resume);
 }
 
-function view_edit(){
-   get_resume(add_edit_flds);
+function view_resume_id(rsm_id){
+  get_resume(display_resume, rsm_id);
+}
+
+function view_resume_list(){
+  get_all_resumes(display_list);
+}
+
+function view_edit(r){
+  get_resume(add_edit_flds, r);
+}
+
+function view_return_to_edit(){
+  add_edit_flds(CUR_RESUME);
 }
 
 function view_new(){
   add_edit_flds({});
 }
 
-function get_resume(display_view){
-  var r;
+function view_preview(){
+  CUR_RESUME = collect_resume();
+  display_resume(CUR_RESUME, true);
+}
+
+function get_resume(display_view, rsm = null){
+  let get_url = 'get';
+  if(rsm != null){
+    get_url = 'get/' + rsm;
+  }
   $.ajax({
     type: 'GET',
     // This is the type of data you're expecting back from the server.
     dataType: 'json',
-    url: 'get',
+    url: get_url,
     success: function (response){
       if(response.status == 'success'){
-      console.log('response: ' + response.status + " " + response.data);
-      r = response.data;
+        r = response.data;
         display_view(r);
       }else{
         display_alert(response.status);
@@ -59,6 +80,29 @@ function get_resume(display_view){
   });
 }
 
+function get_all_resumes(display_view){
+  $.ajax({
+    type: 'GET',
+    // This is the type of data you're expecting back from the server.
+    dataType: 'json',
+    url: 'get_all',
+    success: function (response){
+      if(response.status == 'success'){
+        RESUME_LIST = response.data;
+        display_view(RESUME_LIST);
+      }else{
+        display_alert(response.status);
+        console.log('no resume, response: ' + response.status);
+      }
+    },
+    error : function (err_msg){
+      console.log('! ERROR !');
+      console.log(err_msg);
+      console.log('! ERROR !');
+      display_alert('There was a problem retrieving your resume');
+    }
+  });
+}
 
 function save_resume(rsm){
   //console.log("saving...  -> " + JSON.stringify(rsm,null,2));
@@ -71,46 +115,141 @@ function save_resume(rsm){
     // This is the type of data you're expecting back from the server.
     //dataType: 'text/html',
     url: '/save',
-    success: function (response_data) {
-      //$("html").html( response_data);
+    success: function (response) {
       //$('#SAVE_CANCEL').hide();
       //$('#RESUME_FLD_DIV').hide();
       //$('#RESUME_LIST_DIV').show();
-      console.log("ajax call - save success: " + JSON.stringify(response_data,null,2));
-      display_alert(response_data['status']);
+      //console.log("ajax call - save success: " + JSON.stringify(response_data,null,2));
+      if(response.status=='success'){
+        display_alert(response.status);
+      }else if(response.status == 'Quota Exceeded'){
+        display_alert(response.data);
+      }
+        view_resume_list();
 
       //add_resume_list(e);
     },
     error: function (e){
+      display_alert(e);
+      console.log("ERROR! : " + JSON.stringify(e,null,2));
+    }
+  });
+}
+
+function delete_resume(rsm_id){
+  $.ajax({
+    type: 'DELETE',
+    // Provide correct Content-Type, so that Flask will know how to process it.
+    // This is the type of data you're expecting back from the server.
+    dataType: 'json',
+    url: '/delete/' + rsm_id,
+    success: function (response_data) {
+      console.log("ajax call - delete success: " + JSON.stringify(response_data,null,2));
+      display_alert(response_data['status']);
+      get_all_resumes(display_list);
+    },
+    error: function (e){
+      display_alert(e);
       console.log("ERROR! : " + JSON.stringify(e,null,2));
     }
   });
 }
 
 $(document).on("click", "#SAVE_RESUME", function(){
-  save_resume(CUR_RESUME);
+  if($('#resume-title').val() == '' ) {
+    $('#no_resume_title').removeAttr('hidden');
+    console.log("no resume title");
+  }else{
+    $('#SaveCancelModal').modal('hide');
+    CUR_RESUME.resume_title = $('#resume-title').val();
+    save_resume(CUR_RESUME);
+  }
 });
 
-$(document).on("click", ".preview_resume", function(){
-  CUR_RESUME = collect_resume();
-  display_resume(CUR_RESUME, true);
-  $('#SAVE_CANCEL').show();
+$(document).on("click", "#BACK_TO_EDIT_BTN", function(){
+  view_return_to_edit();
 });
 
-$(document).on("click", "#EDIT_RESUME", function(){
-  window.location.href = '/edit';
-  //add_edit_flds(CUR_RESUME);
+$(document).on("click", ".view_resume_id", function(){
+  let rsm_id = $(this).data('resume-id');
+  view_resume_id(rsm_id);
 });
 
-$(document).on("click", "#NEW_RESUME", function(){
-  window.location.href = '/new';
-  //add_edit_flds({});
+$(document).on("click", "#PREVIEW_RESUME", function(){
+  view_preview();
+});
+
+$(document).on("click", "#SELECT_RESUME_BTN", function(){
+  view_resume_list();
+});
+
+$(document).on("click", ".edit_resume", function(){
+  $('#RESUME_LIST_DIV').hide();
+  let resume_id = $(this).data('resume-id');
+  view_edit(resume_id);
+})
+
+function display_list(r_list){
+  $('#RESUME_FLD_DIV').hide();
+  $('#SAVE_DIV').hide();
+  $('#SELECT_NEW_DIV').show();
+  $('#RESUME_LIST_DIV').show();
+  $('#PREVIEW_BTN_DIV').hide();
+  $('#RESUME_LIST_TABLE').empty();
+  $.each(r_list, function(index, resume){
+    $('#RESUME_LIST_TABLE').append(
+      '<tr class="text-light"><td><button type="button" class="btn btn-block btn-primary edit_resume" data-resume-id="'
+      + resume.id + '">edit</button></td><td>' + resume.id + '</td><td>'
+      +'<b><button data-resume-id="' + resume.id + '" class="btn btn-outline-light view_resume_id">'+ resume.resume_title +'</button></bL</td><td>' + resume.revision +
+      '</td><td><button type="button" class="btn btn-block btn-danger delete_resume_btn" data-resume-id="' + resume.id +
+      '" data-resume-title="' + resume.resume_title + '">delete</button></td></tr>')});
+}
+
+$(document).on("click", "#BACK_BTN", function(){
+  $('#RESUME_FLD_DIV').show();
+  $('#RESUME_LIST_DIV').hide();
+});
+
+$(document).on("click", "#CANCEL_EDIT_RESUME_BTN", function(){
+  view_resume_list();
+});
+
+$(document).on("click", "#CANCEL_PREVIEW_RESUME_BTN", function(){
+  view_resume_list();
+});
+
+$(document).on("click", ".delete_resume_btn", function(){
+  let title = $(this).data('resume-title');
+  let resume_id = $(this).data('resume-id');
+  $('#DELETE_RESUME_BTN').data('resume-id', resume_id);
+  $('#resume_to_delete').html(title);
+  $('#DeleteResumeConfirmModal').modal('show');
+});
+
+$(document).on("click", "#DELETE_RESUME_BTN", function(){
+  let resume_id = $(this).data('resume-id');
+  $('#DeleteResumeConfirmModal').modal('hide');
+  delete_resume(resume_id);
+});
+
+$(document).on("click", "#NEW_RESUME_BTN", function(){
+  view_new();
 });
 
 //<!--     DISPLAY RESUME -->
 function display_resume(resume, preview=false){
-  $('#SAVE_CANCEL').hide();
+  //let resume = resume_json;
+  if(preview){
+    $('#SAVE_DIV').show();
+  }else{
+    $('#SAVE_DIV').hide();
+  }
+  $('#RESUME_LIST_DIV').hide();
+  $('#PREVIEW_BTN_DIV').hide();
+  $('#RESUME_FLD_DIV').show();
   clear_resume();
+  $('#DATE_DIV').html('date modified: ' + resume.revision); 
+  $('#RESUME_TITLE_DIV').html('resume title: ' + resume.resume_title); 
   $('#NAME_DIV').html(resume.name); 
   $('#LOCATION_DIV').html(resume.location);
   if('email' in resume) $('#EMAIL_DIV').html('<a href="mailto:' + resume.email+ '">' + resume.email+ '</a>');
@@ -198,7 +337,7 @@ function display_alert(str_msg){
     </button>
     </div>`;
   alert_msg = alert_a + str_msg + alert_b;
-  $('#RESUME_FLD_DIV').prepend(alert_msg);
+  $('#RESUME_ALERT_DIV').prepend(alert_msg);
 }
 
 function add_resume_list(r_list){
@@ -237,14 +376,17 @@ function add_edit_btns(){
   $('#RESEARCH_DIV').append('<div id="RSCH_DIV_BTN EDIT_BTN" class="container row E_BTN"><button class="btn btn-success" type="button" onclick="add_rsch()">Add Research</button></div>');
   $('#PPROJ_SECTION_DIV').append('<div id="PPROJ_DIV_BTN" class="container row E_BTN"><button class="btn btn-success" type="button" onclick="add_pproj()">Add Personal Project</button></div>');
   $('#EMPLOYMENT_DIV').append('<div id="WORK_DIV_BTN" class="container row E_BTN"><button class="btn btn-success" type="button" onclick="add_job()">Add Job</button></div>');
-  $('#END').append('<div id="PREVIEW_DIV_BTN" class="container row E_BTN"><button class="btn-lg btn-success preview_resume" type="button">PREVIEW RESUME</button></div>');
 }
 
 function add_edit_flds(resume={}){
+  $('#RESUME_FLD_DIV').show();
   clear_resume();
-  $('#SAVE_CANCEL').hide();
-  $('#EDIT_NEW').hide();
-  $( "#RESUME_FLD_DIV" ).wrap('<form id="RESUME_FLD_DIV_FORM" class="new" action="/save" method="POST"></form>');
+  $('#DATE_DIV').html('date modified: ' + resume.revision); 
+  $('#RESUME_TITLE_DIV').html('resume title: ' + resume.resume_title); 
+  $('#SAVE_DIV').hide();
+  $('#SELECT_NEW_DIV').hide();
+  $('#PREVIEW_BTN_DIV').show();
+  $("#RESUME_FLD_DIV" ).wrap('<form id="RESUME_FLD_DIV_FORM" class="new" action="/save" method="POST"></form>');
   add_edit_btns();
   add_top_section(resume);
   //add degrees
@@ -294,7 +436,7 @@ function add_edit_flds(resume={}){
 }
 
 function add_top_section(resume = {'name': 'Name', 'location': 'Location', 'email': 'email', 'website': 'Website', 'github': 'GitHub', 'linkedin': 'Linkedin'}){
-  $('#DATE_DIV').html("Date Modified: " + resume.date_modified);
+  $('#DATE_DIV').html("Date Modified: " + resume.revision);
   var name_fld = '<div class="form-inline"><label class="control-label" for="name">Name</label>';
   name_fld += '<input required type="text" class="form-control" id="NAME" aria-describedby="name" value="' + resume.name + '"></div>';
   $('#NAME_DIV').prepend(name_fld);
@@ -440,14 +582,15 @@ function add_job(job={'Employer':'Employer','from':'From','to':'To','Position':'
 // gets user input in order to submit a resume
 function collect_resume(){
   var resume_JSON = {};
-  resume_JSON.date_modified = new Date();
-  resume_JSON.name = $('#NAME').val();
-  resume_JSON.location = $('#LOCATION').val();
-  resume_JSON.email = $('#EMAIL').val();
-  resume_JSON.website = $('#WEBSITE').val();
-  resume_JSON.github = $('#GITHUB').val();
-  resume_JSON.linkedin = $('#LINKEDIN').val();
-  resume_JSON.Education = [];
+  resume_JSON['resume_title'] = CUR_RESUME.resume_title;
+  resume_JSON['revision'] = new Date();
+  resume_JSON['name'] = $('#NAME').val();
+  resume_JSON['location'] = $('#LOCATION').val();
+  resume_JSON['email'] = $('#EMAIL').val();
+  resume_JSON['website'] = $('#WEBSITE').val();
+  resume_JSON['github'] = $('#GITHUB').val();
+  resume_JSON['linkedin'] = $('#LINKEDIN').val();
+  resume_JSON['Education'] = [];
 
   //add degrees
   $('.DEGREE').each(function(){
@@ -525,5 +668,9 @@ function collect_resume(){
 
   //display_resume(resume_JSON,true);
   return resume_JSON;
+}
 
-  }
+function log(x){
+  console.log(typeof(x));
+  console.log(JSON.stringify(x, null, 2));
+}

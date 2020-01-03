@@ -7,14 +7,18 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.css')}}">
+    <!-- fix for overlapping navbar -->
+    <style>
+      body { padding-top: 70px; }
+    </style>
 
     <title>{% block title %}{% endblock %}</title>
   </head>
 
   <body class="bg-dark text-light">
 
-<!-- Navbar Greeting - Login/Logout    -->
-{% include 'nav.html' %}
+    <!-- Navbar Greeting - Login/Logout    -->
+    {% include 'nav.html' %}
 
     <!-- Flask Message Flashing    -->
     <div class="container">

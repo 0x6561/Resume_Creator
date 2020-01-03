@@ -11,7 +11,7 @@ from .errors import forbidden
 def get_resumes():
     page = request.args.get('page', 1, type=int)
     pagination = Resume.query.paginate(
-        page, per_page=current_app.config['FLASKY_POSTS_PER_PAGE'],
+        page, per_page=current_app.config['POSTS_PER_PAGE'],
         error_out=False)
     resumes = pagination.items
     prev = None
