@@ -26,8 +26,8 @@ def load_resume():
             db.session.add(resume_obj)
             db.session.commit()
             return jsonify({'status':'success', 'data': resume}) 
-        else:
-            return jsonify({'status':'?', 'data': '?}) 
+    else:
+        return jsonify({'status':'?', 'data': '?'}) 
 
 
 @main.route('/get', methods=['GET'])
