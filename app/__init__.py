@@ -17,6 +17,9 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    AppName = config[config_name].AppName
+    app.add_template_global(AppName, 'AppName')
+
     #moment.init_app(app)
     db.init_app(app)
     mail.init_app(app)
